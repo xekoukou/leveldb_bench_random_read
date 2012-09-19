@@ -1,0 +1,8 @@
+gcc -g -std=c99 -o db_bench_init db_bench_init.c tinymt/tinymt32.h tinymt/tinymt32.c tree/tree.h -lleveldb -lczmq -ltcmalloc
+
+
+
+
+
+gcc -g -std=c99 -o db_bench db_bench.c tinymt/tinymt32.h tinymt/tinymt32.c tree/tree.h -lleveldb -lczmq -ltcmalloc
+
