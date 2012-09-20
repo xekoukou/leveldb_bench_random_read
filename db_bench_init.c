@@ -22,9 +22,14 @@ int
 main ()
 {
 unsigned int N_KEYS;
+unsigned int N_BATCH;
 
 printf("\n number of keys:");
 scanf("%u",&N_KEYS);
+
+printf("\n batch size:");
+scanf("%u",&N_BATCH);
+
 
 
 
@@ -36,6 +41,7 @@ scanf("%u",&N_KEYS);
 
 
   int iter;
+  int sec_iter;
   int stop;
   int counter;
 
@@ -47,7 +53,7 @@ scanf("%u",&N_KEYS);
 
 /* initializeOptions */
   leveldb_options_set_create_if_missing (options, 1);
-  leveldb_options_set_write_buffer_size(options,62914560 );
+  leveldb_options_set_write_buffer_size(options,120000000 );
   leveldb_options_set_max_open_files(options,800000);
 /*open Database */
 
@@ -61,24 +67,39 @@ scanf("%u",&N_KEYS);
 
   leveldb_writeoptions_t *writeoptions = leveldb_writeoptions_create ();
 
-
-
-
+leveldb_writebatch_t* batch=leveldb_writebatch_create();
 
 
   int64_t diff = zclock_time ();
 
 //write into database_helper
-  for (iter = 0; iter < N_KEYS; iter++)
+  iter=0;
+  while( iter < N_KEYS)
     {
+     sec_iter=0;
+     while((iter<N_KEYS) && (sec_iter<N_BATCH)){
       unsigned int key = tinymt32_generate_uint32 (&tinymt32);
       unsigned int val = tinymt32_generate_uint32 (&tinymt32);
-      leveldb_put (db_helper,
-		   writeoptions,
+      leveldb_writebatch_put (batch,
 		   (const char *) &key, sizeof (int),
-		   (const char *) &val, sizeof (int), &errptr);
-      assert (errptr == NULL);
+		   (const char *) &val, sizeof (int));
+    sec_iter++;
+    iter++;
     }
+      leveldb_write(
+    db_helper,
+    writeoptions,
+    batch,
+    &errptr);
+
+      if(errptr!=NULL){
+      printf("\n%s",errptr);
+      }
+      assert (errptr == NULL);
+      leveldb_writebatch_clear(batch);
+    }
+  
+      leveldb_writebatch_destroy(batch);
 
   diff = zclock_time () - diff;
 
